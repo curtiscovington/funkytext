@@ -1,0 +1,2464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>funkytext</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1' y1='0' y2='1'%3E%3Cstop stop-color='%237cf8d8'/%3E%3Cstop offset='1' stop-color='%23ff7ee2'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='12' fill='%230d0a1a'/%3E%3Ctext x='50%25' y='52%25' font-family='Space Grotesk,Arial' font-weight='700' font-size='34' text-anchor='middle' fill='url(%23g)'%3Ef%3C/text%3E%3C/svg%3E">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0a1a;
+      --panel: rgba(255, 255, 255, 0.08);
+      --accent: #7cf8d8;
+      --accent-2: #ff7ee2;
+      --text: #e9e6ff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      min-height: 100dvh;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    body {
+      width: 100vw;
+      height: 100dvh;
+      background: radial-gradient(circle at 20% 20%, rgba(124, 248, 216, 0.15), transparent 35%),
+                  radial-gradient(circle at 80% 0%, rgba(255, 126, 226, 0.18), transparent 40%),
+                  radial-gradient(circle at 50% 80%, rgba(124, 248, 216, 0.12), transparent 35%),
+                  var(--bg);
+      color: var(--text);
+      font-family: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
+      overflow: hidden;
+      display: block;
+    }
+
+    main {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100dvh;
+      border-radius: 0;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
+    }
+
+    .canvas-wrap {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 30% 30%, rgba(124, 248, 216, 0.18), transparent 35%), #0a0716;
+      border-radius: 0;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .controls-toggle-btn {
+      position: relative;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 8px 10px;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: border 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, transform 0.15s ease;
+      z-index: 3;
+    }
+
+    .controls-toggle-btn .icon {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.7;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .controls-toggle-btn:hover {
+      border-color: var(--accent);
+      background: rgba(255, 255, 255, 0.12);
+      box-shadow: 0 0 0 3px rgba(124, 248, 216, 0.15);
+      transform: translateY(-1px);
+    }
+
+    #share-btn:disabled,
+    #share-btn.rendering {
+      opacity: 0.45;
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.08);
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+      color: rgba(233, 230, 255, 0.65);
+    }
+
+    .top-actions {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: flex;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      z-index: 3;
+    }
+
+    .top-actions .controls-toggle-btn {
+      flex: 0 0 auto;
+    }
+
+    .install-btn {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 5;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: linear-gradient(135deg, rgba(124, 248, 216, 0.2), rgba(255, 126, 226, 0.2));
+      color: var(--text);
+      border-radius: 12px;
+      padding: 10px 12px;
+      cursor: pointer;
+      font-size: 15px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-6px);
+      transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease;
+    }
+
+    .install-btn .icon {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .install-btn.visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    .install-btn:focus-visible {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(124, 248, 216, 0.25);
+    }
+
+    .install-btn:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    body.install-ready .controls-dock {
+      top: 68px;
+    }
+
+    .controls-dock {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      width: min(420px, 48vw);
+      background: rgba(12, 9, 22, 0.82);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 12px 38px rgba(0, 0, 0, 0.45);
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: calc(100% - 24px);
+      overflow: hidden;
+    }
+
+    .controls-dock header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 40px);
+      letter-spacing: -0.03em;
+    }
+
+    .tagline {
+      margin: 0;
+      color: rgba(233, 230, 255, 0.8);
+      font-size: 15px;
+      line-height: 1.4;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      color: rgba(233, 230, 255, 0.82);
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 140px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.04);
+      padding: 12px;
+      color: var(--text);
+      font-size: 16px;
+      resize: vertical;
+      outline: none;
+      transition: border 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(124, 248, 216, 0.15);
+    }
+
+    .picker-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-top: 4px;
+      gap: 8px;
+    }
+
+    .picker-header h2 {
+      margin: 0;
+      font-size: 14px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: rgba(233, 230, 255, 0.78);
+    }
+
+    .picker-header span {
+      font-size: 12px;
+      color: rgba(233, 230, 255, 0.65);
+    }
+
+    .shader-picker {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(180px, 1fr);
+      gap: 10px;
+      overflow-x: auto;
+      padding: 6px 6px 10px 6px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(124, 248, 216, 0.4) rgba(255, 255, 255, 0.06);
+    }
+
+    .shader-picker::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    .shader-picker::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 999px;
+    }
+
+    .shader-picker::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border-radius: 999px;
+    }
+
+    .shader-card {
+      position: relative;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.05);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      min-height: 150px;
+    }
+
+    .shader-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(124, 248, 216, 0.65);
+      box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .shader-card.selected {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(124, 248, 216, 0.25), 0 14px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .shader-card canvas {
+      width: 100%;
+      aspect-ratio: 3 / 2;
+      border-radius: 8px;
+      display: block;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: radial-gradient(circle at 20% 20%, rgba(124, 248, 216, 0.12), rgba(255, 255, 255, 0.02));
+    }
+
+    .shader-card .label {
+      font-size: 14px;
+      color: rgba(233, 230, 255, 0.85);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .shader-card.error {
+      border-color: #ff7f8a;
+      box-shadow: 0 0 0 2px rgba(255, 127, 138, 0.3), 0 14px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .icon-btn {
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      font-size: 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: border 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, transform 0.15s ease;
+    }
+
+    .icon-btn:hover {
+      border-color: var(--accent);
+      background: rgba(255, 255, 255, 0.1);
+      box-shadow: 0 0 0 3px rgba(124, 248, 216, 0.15);
+      transform: translateY(-1px);
+    }
+
+    .icon-btn:active {
+      transform: translateY(0);
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%) translateY(12px);
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 14px;
+      letter-spacing: 0.01em;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 5;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    body.fullscreen .controls-dock,
+    body.controls-hidden .controls-dock {
+      display: none;
+    }
+
+    @media (max-width: 900px) {
+      body {
+        padding: 10px;
+      }
+
+      main {
+        height: calc(100vh);
+      }
+
+      .controls-dock {
+        width: calc(100% - 20px);
+        left: 10px;
+        right: 10px;
+        top: auto;
+        bottom: 10px;
+        max-height: 52vh;
+      }
+
+      body.install-ready .controls-dock {
+        top: auto;
+      }
+
+      textarea {
+        min-height: 110px;
+        font-size: 15px;
+      }
+
+      .shader-picker {
+        grid-auto-columns: minmax(180px, 70vw);
+        gap: 10px;
+      }
+
+      .canvas-wrap {
+        border-radius: 10px;
+      }
+
+      .fs-icon {
+        top: 10px;
+        right: 10px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .controls-dock {
+        padding: 14px;
+      }
+
+      h1 {
+        font-size: clamp(26px, 8vw, 32px);
+      }
+
+      .icon-btn {
+        padding: 9px 10px;
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <button id="install-btn" class="install-btn" type="button" aria-label="Add funkytext to your home screen" hidden>
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 5v14"></path>
+      <path d="M5 12h14"></path>
+    </svg>
+    Add to Home
+  </button>
+  <main>
+    <section class="canvas-wrap">
+      <div class="top-actions">
+        <button id="copy-btn" class="controls-toggle-btn" aria-label="Copy link" title="Copy link">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="9" y="9" width="11" height="13" rx="2" ry="2"></rect>
+            <rect x="4" y="4" width="11" height="13" rx="2" ry="2"></rect>
+          </svg>
+        </button>
+        <button id="share-btn" class="controls-toggle-btn" aria-label="Share GIF" title="Share GIF">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 4l4 4h-3v7h-2V8H8l4-4z"></path>
+            <path d="M6 20h12"></path>
+          </svg>
+        </button>
+        <button id="controls-toggle" class="controls-toggle-btn" aria-label="Toggle controls" title="Toggle controls">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <line x1="5" y1="7" x2="19" y2="7"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <line x1="5" y1="17" x2="19" y2="17"></line>
+            <circle cx="9" cy="7" r="2"></circle>
+            <circle cx="15" cy="12" r="2"></circle>
+            <circle cx="11" cy="17" r="2"></circle>
+          </svg>
+        </button>
+      </div>
+      <canvas id="stage" aria-label="Funky text rendering"></canvas>
+    </section>
+
+    <div class="controls-dock">
+
+      <textarea id="input" spellcheck="false" maxlength="260"></textarea>
+
+      <div class="picker-header">
+    
+      </div>
+      <div class="shader-picker" id="shader-picker" aria-label="Shader styles carousel"></div>
+
+    </div>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const canvas = document.getElementById('stage');
+    const input = document.getElementById('input');
+    const shaderPicker = document.getElementById('shader-picker');
+    const controlsToggle = document.getElementById('controls-toggle');
+    const copyBtn = document.getElementById('copy-btn');
+    const shareBtn = document.getElementById('share-btn');
+    const installBtn = document.getElementById('install-btn');
+    const toastEl = document.getElementById('toast');
+    let toastTimer = null;
+    let capturingGif = false;
+    let shareReady = false;
+    let gifBlob = null;
+    let gifRenderPromise = null;
+    let gifRenderTimer = null;
+    let lastGifKey = null;
+    let deferredInstallPrompt = null;
+
+    // Preserve the drawing buffer so frames can be copied into GIF captures instead of going black
+    const gl = canvas.getContext('webgl', { premultipliedAlpha: false, preserveDrawingBuffer: true });
+    if (!gl) {
+      const ctx = canvas.getContext('2d');
+      const width = canvas.clientWidth || 600;
+      const height = canvas.clientHeight || 360;
+      canvas.width = width;
+      canvas.height = height;
+      const message = 'WebGL is required for funkytext. Please enable it in your browser.';
+      ctx.fillStyle = '#161127';
+      ctx.fillRect(0, 0, width, height);
+      ctx.fillStyle = '#7cf8d8';
+      ctx.font = '18px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(message, width / 2, height / 2, width - 80);
+      input.disabled = true;
+      copyBtn.disabled = true;
+      shareBtn.disabled = true;
+      throw new Error('WebGL unavailable');
+    }
+
+    function setShareReady(isReady) {
+      shareReady = isReady;
+      if (shareBtn) {
+        shareBtn.disabled = !isReady;
+        shareBtn.classList.toggle('rendering', !isReady);
+      }
+    }
+
+    const vertSrc = `
+      attribute vec2 a_position;
+      varying vec2 v_uv;
+      void main() {
+        v_uv = vec2(a_position.x * 0.5 + 0.5, 1.0 - (a_position.y * 0.5 + 0.5));
+        gl_Position = vec4(a_position, 0.0, 1.0);
+      }
+    `;
+
+    const shaderOptions = [
+      {
+        id: 'noir_city',
+        label: 'Noir City',
+        frag: `
+          precision mediump float;
+          uniform sampler2D u_texture;
+          uniform float u_time;
+          uniform vec2 u_resolution;
+          varying vec2 v_uv;
+
+          // Pseudo-random function
+          float hash(vec2 p) {
+            return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+          }
+
+          // Rain distortion noise
+          float rain(vec2 uv) {
+            vec2 aspect = vec2(3.0, 1.0); // Stretch vertically for rain drops
+            vec2 st = uv * aspect * vec2(10.0, 40.0);
+            vec2 ipos = floor(st);
+            
+            // Random drop speed and offset
+            float speed = 2.0 + hash(vec2(ipos.x, 0.0)) * 3.0;
+            float y = st.y + u_time * speed;
+            
+            // Quantize Y to create "streams"
+            float stream = step(0.9, fract(sin(ipos.x * 99.0) * 43758.54 + y * 0.05));
+            return stream;
+          }
+
+          void main() {
+            vec2 uv = v_uv;
+            
+            // 1. Rain Distortion
+            // We sample the rain "noise" and use it to displace the text UVs
+            float r = rain(uv);
+            vec2 distort = vec2(r * 0.02 * sin(uv.y * 10.0), r * 0.05);
+            
+            vec4 tex = texture2D(u_texture, uv + distort);
+            float mask = tex.a;
+
+            // 2. High Contrast "Sin City" Look
+            // If the alpha is weak, kill it. If strong, max it.
+            float contrastMask = smoothstep(0.4, 0.6, mask);
+            
+            // 3. Lighting: Flashing Neon Sign reflection
+            float neonFlash = step(0.9, sin(u_time * 5.0)) * step(0.5, sin(u_time * 20.0));
+            vec3 redNeon = vec3(1.0, 0.0, 0.2);
+            vec3 white = vec3(0.9, 0.9, 1.0);
+            
+            // Base is dark, wet ink
+            vec3 color = vec3(0.05, 0.05, 0.08);
+            
+            // Mix white text with occasional red neon splash
+            vec3 inkColor = mix(white, redNeon, neonFlash * 0.5);
+            color = mix(color, inkColor, contrastMask);
+            
+            // 4. Subtle Vignette
+            float vign = smoothstep(1.0, 0.2, distance(uv, vec2(0.5)));
+            color *= vign;
+
+            gl_FragColor = vec4(color, contrastMask); // Use contrast mask for hard edges
+          }
+        `
+      },
+      {
+        id: 'holodeck',
+        label: 'Holodeck Transmission',
+        frag: `
+          precision mediump float;
+          uniform sampler2D u_texture;
+          uniform float u_time;
+          uniform vec2 u_resolution;
+          varying vec2 v_uv;
+
+          float rand(vec2 n) { 
+            return fract(sin(dot(n, vec2(12.9898, 4.1414))) * 43758.5453);
+          }
+
+          void main() {
+            vec2 uv = v_uv;
+            
+            // 1. Interlaced Scanlines
+            // Create horizontal bands
+            float scanline = sin(uv.y * 200.0 + u_time * 10.0);
+            // Only keep every other line mostly
+            float scanMask = step(0.0, scanline);
+            
+            // 2. Glitch Shift
+            // Occasionally offset the x-axis
+            float glitchBlock = floor(uv.y * 10.0);
+            float glitchTime = floor(u_time * 10.0);
+            float noise = rand(vec2(glitchBlock, glitchTime));
+            float shift = (noise - 0.5) * 0.1 * step(0.95, noise); // 5% chance of glitch
+            
+            vec2 holoUV = uv + vec2(shift, 0.0);
+            
+            // 3. Chromatic Aberration (Blue/Cyan tinting)
+            float r = texture2D(u_texture, holoUV + vec2(0.005, 0.0)).a;
+            float g = texture2D(u_texture, holoUV).a;
+            float b = texture2D(u_texture, holoUV - vec2(0.005, 0.0)).a;
+            
+            // Hologram Palette
+            vec3 hologram = vec3(0.2, 0.9, 1.0); // Cyan main
+            vec3 ghost = vec3(0.1, 0.3, 1.0);    // Blue ghost
+            
+            vec3 color = mix(vec3(0.0), hologram, g);
+            color += vec3(r * 0.5, 0.0, b * 0.5) * ghost; // Add color fringe
+            
+            // 4. Fresnel / Edge Fade
+            // Holograms fade at the edges
+            float alpha = g;
+            alpha *= (0.8 + 0.2 * scanline); // Apply scanlines to alpha
+            
+            // 5. Vertical "Tracking" flicker
+            float flicker = 0.9 + 0.1 * sin(u_time * 30.0);
+            
+            gl_FragColor = vec4(color * flicker, alpha);
+          }
+        `
+      },
+      {
+        id: 'grindhouse',
+        label: 'Grindhouse VHS',
+        frag: `
+          precision mediump float;
+          uniform sampler2D u_texture;
+          uniform float u_time;
+          uniform vec2 u_resolution;
+          varying vec2 v_uv;
+
+          // Hash function for static noise
+          float hash(vec2 p) {
+              p = fract(p * vec2(234.34, 435.345));
+              p += dot(p, p + 34.23);
+              return fract(p.x * p.y);
+          }
+
+          void main() {
+            vec2 uv = v_uv;
+            
+            // 1. Fish-eye distortion (CRT Curve)
+            vec2 centered = uv - 0.5;
+            float r = length(centered);
+            // Warps uv coordinates slightly at edges
+            uv = 0.5 + centered * (1.0 + 0.1 * r * r);
+            
+            // Check if we are outside the screen after warp (black border)
+            float border = step(0.0, uv.x) * step(uv.x, 1.0) * step(0.0, uv.y) * step(uv.y, 1.0);
+
+            // 2. Tracking Error (The bar of static that moves up)
+            float tracking = fract(u_time * 0.2);
+            float trackZone = smoothstep(tracking - 0.1, tracking, uv.y) - smoothstep(tracking, tracking + 0.1, uv.y);
+            // Apply heavy jitter inside the tracking zone
+            float jitter = (hash(uv * u_time) - 0.5) * 0.1 * trackZone;
+            
+            vec2 finalUV = uv + vec2(jitter, 0.0);
+            
+            // 3. Color Bleed (YIQ-ish separation)
+            // Sample R, G, B at slightly different offsets
+            float delta = 0.005 + 0.01 * trackZone;
+            
+            float maskR = texture2D(u_texture, finalUV + vec2(delta, 0.0)).a;
+            float maskG = texture2D(u_texture, finalUV).a;
+            float maskB = texture2D(u_texture, finalUV - vec2(delta, 0.0)).a;
+            
+            // Vintage Slasher Palette
+            vec3 colR = vec3(1.0, 0.2, 0.2);
+            vec3 colG = vec3(0.2, 1.0, 0.2);
+            vec3 colB = vec3(0.2, 0.2, 1.0);
+            
+            vec3 color = colR * maskR + colG * maskG + colB * maskB;
+            
+            // 4. Film Grain
+            float grain = hash(uv * u_time * 100.0);
+            color += grain * 0.15;
+            
+            // 5. Scanlines (Subtle)
+            color -= sin(uv.y * 400.0) * 0.1;
+
+            gl_FragColor = vec4(color * border, max(max(maskR, maskG), maskB) * border);
+          }
+        `
+      },
+      {
+        id: 'silver_screen',
+        label: 'Silver Screen (1920s)',
+        frag: `
+          precision mediump float;
+          uniform sampler2D u_texture;
+          uniform float u_time;
+          uniform vec2 u_resolution;
+          varying vec2 v_uv;
+
+          float noise(vec2 p) {
+            return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+          }
+
+          void main() {
+            vec2 uv = v_uv;
+            
+            // 1. Projector Shake
+            // Randomly offset the entire frame by a tiny amount every few frames
+            vec2 shake = vec2(noise(vec2(u_time)), noise(vec2(u_time + 10.0))) - 0.5;
+            shake *= 0.005; 
+            
+            vec2 projUV = uv + shake;
+            
+            vec4 tex = texture2D(u_texture, projUV);
+            float mask = tex.a;
+            
+            // 2. Film Scratches
+            // Vertical white lines that appear randomly
+            float scratchTime = floor(u_time * 12.0); // 12 FPS feel
+            float scratchPos = noise(vec2(scratchTime, 0.0));
+            float scratch = 1.0 - smoothstep(0.002, 0.004, abs(uv.x - scratchPos));
+            // Only show scratch occasionally
+            scratch *= step(0.9, noise(vec2(scratchTime, 1.0)));
+            
+            // 3. Exposure Flicker
+            // Old bulbs fluctuate in brightness
+            float flicker = 0.8 + 0.4 * noise(vec2(u_time * 15.0, 0.0));
+            
+            // 4. Film Grain (Heavy)
+            float grain = noise(uv * u_time * 50.0);
+            
+            // 5. Sepia / B&W Tone
+            vec3 sepia = vec3(1.2, 1.0, 0.8);
+            vec3 ink = vec3(0.1, 0.08, 0.05); // Dark brownish black
+            vec3 paper = vec3(0.9, 0.85, 0.8); // Aged paper
+            
+            // Invert mask for "Card" look or Normal for "Text on Screen"
+            // Let's do bright text on dark background for "Silent Movie Intertitle"
+            vec3 color = mix(ink, paper, mask);
+            
+            // Apply lighting effects
+            color *= flicker;
+            color += scratch * 0.5;
+            color -= grain * 0.2;
+            
+            // 6. Vignette (Strong)
+            float d = distance(uv, vec2(0.5));
+            color *= smoothstep(0.8, 0.3, d);
+
+            gl_FragColor = vec4(color, 1.0);
+          }
+        `
+      },
+      {
+        id: 'cyber_glitch',
+        label: 'Cyber Glitch',
+        frag: `
+          precision mediump float;
+          uniform sampler2D u_texture;
+          uniform float u_time;
+          uniform vec2 u_resolution;
+          varying vec2 v_uv;
+
+          float random(vec2 st) {
+            return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
+          }
+
+          void main() {
+            vec2 uv = v_uv;
+            
+            // Create time-based blocky noise
+            float timeBlock = floor(u_time * 15.0);
+            float noiseLine = random(vec2(floor(uv.y * 20.0), timeBlock));
+            
+            // Jitter triggers only occasionally
+            float glitchTrigger = smoothstep(0.85, 1.0, sin(u_time * 2.0) * sin(u_time * 0.5));
+            float jitter = (noiseLine - 0.5) * 0.1 * glitchTrigger;
+            
+            // Horizontal slice displacement
+            float slice = step(0.9, random(vec2(u_time * 50.0, floor(uv.y * 10.0))));
+            vec2 offset = vec2(slice * 0.05 * sin(u_time * 20.0), 0.0);
+            
+            vec2 uvGlitch = uv + vec2(jitter, 0.0) + offset;
+
+            // Chromatic Aberration (RGB Split)
+            float split = (0.005 + 0.02 * glitchTrigger) * (1.0 + length(uv - 0.5));
+            
+            float r = texture2D(u_texture, uvGlitch + vec2(split, 0.0)).r;
+            float g = texture2D(u_texture, uvGlitch).g;
+            float b = texture2D(u_texture, uvGlitch - vec2(split, 0.0)).b;
+            float a = texture2D(u_texture, uvGlitch).a;
+
+            // Scanlines
+            float scanline = sin(uv.y * u_resolution.y * 0.5 + u_time * 10.0) * 0.1;
+            
+            vec3 color = vec3(r, g, b);
+            
+            // Digital burn effect
+            color += vec3(0.2, 0.8, 0.4) * slice * 0.5; 
+            color -= scanline;
+
+            gl_FragColor = vec4(color, a);
+          }
+        `
+      },
+      {
+        id: 'molten_gold',
+        label: 'Molten Gold',
+        frag: `
+          precision mediump float;
+          uniform sampler2D u_texture;
+          uniform float u_time;
+          uniform vec2 u_resolution;
+          varying vec2 v_uv;
+
+          void main() {
+            vec2 uv = v_uv;
+            vec2 p = -1.0 + 2.0 * uv;
+
+            // Fluid distortion coordinates
+            float t = u_time * 0.8;
+            p.x += sin(p.y * 4.0 + t) * 0.1;
+            p.y += sin(p.x * 4.0 + t * 0.7) * 0.1;
+            
+            // Multiple layers of sine waves for liquid feeling
+            float flow = sin(p.x * 10.0 + t) * sin(p.y * 10.0 + t);
+            flow += sin(p.x * 20.0 - t * 2.0) * 0.5;
+            
+            vec2 distortedUV = uv + vec2(cos(flow), sin(flow)) * 0.015;
+            vec4 tex = texture2D(u_texture, distortedUV);
+            float mask = tex.a;
+
+            // Pseudo-specular lighting
+            float light = sin(flow * 3.0 + t * 2.0);
+            float highlight = smoothstep(0.6, 0.9, light);
+            float shadow = smoothstep(0.4, 0.1, light);
+
+            // Gold Palette
+            vec3 darkGold = vec3(0.4, 0.25, 0.05);
+            vec3 brightGold = vec3(1.0, 0.8, 0.2);
+            vec3 shine = vec3(1.0, 1.0, 0.9);
+
+            vec3 color = mix(darkGold, brightGold, light * 0.5 + 0.5);
+            color = mix(color, shine, highlight * 0.8);
+            color *= (1.0 - shadow * 0.5);
+
+            // Edge glow
+            float glow = smoothstep(0.2, 0.6, mask) * 0.5;
+            vec3 finalColor = mix(vec3(0.0), color, mask);
+            finalColor += glow * brightGold * 0.3;
+
+            gl_FragColor = vec4(finalColor, 1.0);
+          }
+        `
+      },
+      {
+        id: 'inferno',
+        label: 'Inferno Rise',
+        frag: `
+          precision mediump float;
+          uniform sampler2D u_texture;
+          uniform float u_time;
+          uniform vec2 u_resolution;
+          varying vec2 v_uv;
+
+          float hash(vec2 p) {
+            p = fract(p * vec2(123.34, 456.21));
+            p += dot(p, p + 45.32);
+            return fract(p.x * p.y);
+          }
+
+          float noise(vec2 p) {
+            vec2 i = floor(p);
+            vec2 f = fract(p);
+            f = f * f * (3.0 - 2.0 * f);
+            return mix(mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), f.x),
+                       mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
+          }
+
+          float fbm(vec2 p) {
+            float v = 0.0;
+            float a = 0.5;
+            for (int i = 0; i < 4; i++) {
+              v += a * noise(p);
+              p *= 2.0;
+              a *= 0.5;
+            }
+            return v;
+          }
+
+          void main() {
+            vec2 uv = v_uv;
+            
+            // Displacement for heat haze
+            float heat = fbm(uv * 4.0 - vec2(0.0, u_time * 1.5));
+            vec2 distortUV = uv + vec2(heat * 0.03, heat * 0.05 * uv.y);
+            
+            vec4 tex = texture2D(u_texture, distortUV);
+            float mask = tex.a;
+
+            // Generate flame pattern
+            float fire = fbm(uv * 6.0 - vec2(0.0, u_time * 2.2));
+            
+            // Color Palette
+            vec3 dark = vec3(0.1, 0.0, 0.0);
+            vec3 red = vec3(0.8, 0.1, 0.05);
+            vec3 orange = vec3(1.0, 0.6, 0.1);
+            vec3 yellow = vec3(1.0, 0.9, 0.4);
+            
+            float intensity = fire * 1.5 + (1.0 - uv.y) * 0.5;
+            
+            vec3 color = mix(dark, red, smoothstep(0.0, 0.4, intensity));
+            color = mix(color, orange, smoothstep(0.4, 0.7, intensity));
+            color = mix(color, yellow, smoothstep(0.7, 1.0, intensity));
+            
+            // Masking text
+            color *= smoothstep(0.1, 0.9, mask);
+            
+            // Add embers (Fixed the function call here)
+            float emberNoise = hash(uv * 20.0 + u_time);
+            float embers = step(0.98, emberNoise) * mask * (uv.y); // More embers at bottom
+            
+            gl_FragColor = vec4(color + embers, 1.0);
+          }
+        `
+      },
+      {
+        id: 'quantum_snap',
+        label: 'Quantum Decay',
+        frag: `
+          precision mediump float;
+          uniform sampler2D u_texture;
+          uniform float u_time;
+          uniform vec2 u_resolution;
+          varying vec2 v_uv;
+
+          // Gold Noise (high frequency, no artifacts)
+          float random(vec2 uv) {
+             return fract(tan(distance(uv * 1.618, uv) * u_time) * uv.x);
+          }
+
+          float noise(vec2 p) {
+             vec2 i = floor(p);
+             vec2 f = fract(p);
+             f = f * f * (3.0 - 2.0 * f);
+             float a = random(i);
+             float b = random(i + vec2(1.0, 0.0));
+             float c = random(i + vec2(0.0, 1.0));
+             float d = random(i + vec2(1.0, 1.0));
+             return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+          }
+
+          void main() {
+            vec2 uv = v_uv;
+            
+            // Create a disintegration threshold that moves across the text
+            // Oscillates back and forth over time
+            float progress = (sin(u_time * 0.5) * 0.5 + 0.5) * 1.5 - 0.25;
+            
+            // Noise field for particle dispersion
+            float n = noise(uv * 15.0 + u_time);
+            
+            // Calculate if a pixel should be disintegrated
+            // We bias it by X position to make it wipe across
+            float dissolve = smoothstep(progress - 0.2, progress + 0.2, uv.x + n * 0.4);
+            
+            // Displace "dust" pixels upwards and disperse them
+            vec2 offset = vec2(n * 0.1 - 0.05, n * 0.3) * (1.0 - dissolve);
+            vec2 dustUV = uv - offset;
+            
+            vec4 solidTex = texture2D(u_texture, uv);
+            vec4 dustTex = texture2D(u_texture, dustUV);
+            
+            // Composition
+            vec3 solidColor = vec3(0.1, 0.1, 0.15); // Dark solid
+            vec3 dustColor = vec3(0.0, 0.8, 1.0);   // Cyan energy particles
+            
+            // The solid text exists where dissolve is high
+            float solidMask = solidTex.a * dissolve;
+            
+            // The dust exists where dissolve is low, but based on the offset texture
+            float dustMask = dustTex.a * (1.0 - dissolve) * step(0.4, n);
+            
+            // Glowing edge at the transition line
+            float edge = 1.0 - abs(dissolve - 0.5) * 2.0;
+            edge = pow(edge, 5.0) * solidTex.a;
+            
+            vec3 color = mix(vec3(0.0), solidColor, solidMask);
+            color += dustMask * dustColor * 2.0; // Glow boost
+            color += edge * vec3(1.0, 0.2, 0.5) * 2.0; // Hot pink burn edge
+
+            gl_FragColor = vec4(color, 1.0);
+          }
+        `
+      },
+      {
+        id: 'biolume_deep',
+        label: 'Abyssal Biolume',
+        frag: `
+          precision mediump float;
+          uniform sampler2D u_texture;
+          uniform float u_time;
+          uniform vec2 u_resolution;
+          varying vec2 v_uv;
+
+          void main() {
+            vec2 uv = v_uv;
+            vec2 p = (uv - 0.5) * 2.0;
+
+            // Tentacle/Vein pulsing math
+            float t = u_time * 0.5;
+            float r = length(p);
+            float a = atan(p.y, p.x);
+            
+            // complex wave function in polar coordinates
+            float wave = sin(a * 10.0 + r * 5.0 + t) * sin(r * 10.0 - t * 2.0);
+            wave += sin(a * 20.0 + t * 3.0) * 0.2;
+            
+            // Organic distortion
+            vec2 distort = vec2(cos(wave), sin(wave)) * 0.02;
+            vec4 tex = texture2D(u_texture, uv + distort);
+            float mask = tex.a;
+            
+            // Interior "Cells"
+            vec2 cellGrid = fract(uv * 15.0) - 0.5;
+            float cells = smoothstep(0.4, 0.3, length(cellGrid));
+            float cellPulse = sin(u_time * 3.0 + uv.x * 10.0) * 0.5 + 0.5;
+            
+            // Palette: Deep Sea
+            vec3 deepBlue = vec3(0.02, 0.05, 0.1);
+            vec3 neonTeal = vec3(0.1, 0.9, 0.7);
+            vec3 biolume = vec3(0.2, 1.0, 0.4);
+            
+            // Fill
+            vec3 color = deepBlue;
+            color = mix(color, neonTeal, mask * (0.5 + 0.5 * wave));
+            
+            // Bright spots (bioluminescence)
+            float spots = cells * cellPulse * mask;
+            color += spots * biolume;
+            
+            // Rim lighting
+            float rim = smoothstep(0.2, 0.6, mask) - smoothstep(0.6, 1.0, mask);
+            color += rim * neonTeal * 0.5;
+
+            gl_FragColor = vec4(color, 1.0);
+          }
+        `
+      },
+      {
+        id: 'hyper_chrome',
+        label: 'Liquid Chrome',
+        frag: `
+          precision mediump float;
+          uniform sampler2D u_texture;
+          uniform float u_time;
+          uniform vec2 u_resolution;
+          varying vec2 v_uv;
+
+          // Pseudo-environment map reflection
+          float env(vec2 p) {
+             float line = sin(p.x * 5.0 + p.y * 5.0 + u_time);
+             float circle = sin(length(p) * 10.0 - u_time * 2.0);
+             return smoothstep(-0.2, 0.2, line + circle);
+          }
+
+          void main() {
+            vec2 uv = v_uv;
+            
+            // Create a normal map from the texture alpha gradient
+            float delta = 0.005;
+            float alpha = texture2D(u_texture, uv).a;
+            float alphaX = texture2D(u_texture, uv + vec2(delta, 0.0)).a;
+            float alphaY = texture2D(u_texture, uv + vec2(0.0, delta)).a;
+            
+            // Calculate slope (pseudo normal)
+            vec3 normal = normalize(vec3(alpha - alphaX, alpha - alphaY, delta));
+            
+            // Light source direction (rotating)
+            vec3 lightDir = normalize(vec3(sin(u_time), cos(u_time), 1.0));
+            
+            // Specular reflection (Blinn-Phong)
+            vec3 viewDir = vec3(0.0, 0.0, 1.0);
+            vec3 halfDir = normalize(lightDir + viewDir);
+            float spec = pow(max(dot(normal, halfDir), 0.0), 32.0) * alpha;
+            
+            // Environment reflection (Chrome effect)
+            // We distort the lookup based on the normal we calculated
+            vec2 reflectUV = uv + normal.xy * 0.2;
+            float reflection = env(reflectUV * 2.0);
+            
+            // Chromatic aberration on reflection
+            float r = env(reflectUV * 2.0 + vec2(0.01));
+            float b = env(reflectUV * 2.0 - vec2(0.01));
+            
+            vec3 chromeBase = vec3(0.7, 0.7, 0.8);
+            vec3 reflectionColor = vec3(r, reflection, b);
+            
+            // Combine
+            vec3 color = chromeBase * reflectionColor;
+            color += spec * vec3(1.0); // Pure white highlight
+            
+            // Mask transparency
+            color *= smoothstep(0.2, 0.9, alpha);
+            
+            gl_FragColor = vec4(color, 1.0);
+          }
+        `
+      },
+      {
+        id: 'aurora',
+        label: 'Aurora Warp',
+        frag: `
+          precision mediump float;
+          uniform sampler2D u_texture;
+          uniform float u_time;
+          uniform vec2 u_resolution;
+          varying vec2 v_uv;
+
+          vec2 hash(vec2 p) {
+            p = vec2(dot(p, vec2(127.1, 311.7)),
+                     dot(p, vec2(269.5, 183.3)));
+            return -1.0 + 2.0 * fract(sin(p) * 43758.5453123);
+          }
+
+          float noise(in vec2 p) {
+            const float K1 = 0.366025404;
+            const float K2 = 0.211324865;
+            vec2 i = floor(p + (p.x + p.y) * K1);
+            vec2 a = p - i + (i.x + i.y) * K2;
+            vec2 o = step(a.yx, a.xy);
+            vec2 b = a - o + K2;
+            vec2 c = a - 1.0 + 2.0 * K2;
+            vec3 h = max(0.5 - vec3(dot(a, a), dot(b, b), dot(c, c)), 0.0);
+            vec3 n = h * h * h * h * vec3(dot(a, hash(i)),
+                                          dot(b, hash(i + o)),
+                                          dot(c, hash(i + 1.0)));
+            return dot(n, vec3(70.0));
+          }
+
+          vec3 palette(float t) {
+            vec3 a = vec3(0.49, 0.95, 0.82);
+            vec3 b = vec3(0.98, 0.54, 0.88);
+            vec3 c = vec3(0.6, 0.8, 0.9);
+            vec3 d = vec3(0.0, 0.33, 0.67);
+            return a + b * cos(6.28318 * (c * t + d));
+          }
+
+          void main() {
+            vec2 uv = v_uv;
+            vec2 centered = (uv - 0.5) * vec2(u_resolution.x / u_resolution.y, 1.0);
+
+            float n = noise(centered * 1.8 + u_time * 0.3);
+            float warp = sin(uv.y * 6.28318 + u_time * 0.7) * 0.015;
+            float warp2 = sin((uv.x + uv.y) * 10.0 + u_time * 0.9) * 0.012;
+            vec2 warpedUV = uv + vec2(warp + warp2, warp2 * 0.6);
+
+            vec4 textSample = texture2D(u_texture, warpedUV);
+            float mask = textSample.a;
+
+            float glow = smoothstep(0.2, 0.75, mask) * 0.35;
+            float vignette = smoothstep(0.9, 0.4, length(centered)) * 0.45;
+
+            float pulse = sin(u_time * 0.8) * 0.1 + 0.5;
+            vec3 color = palette(mask * 0.55 + pulse + n * 0.12);
+
+            vec3 ink = mix(vec3(0.03, 0.01, 0.07), color, mask);
+            ink += glow * color * 0.6;
+            ink += vignette * 0.2;
+
+            gl_FragColor = vec4(ink, 1.0);
+          }
+        `
+      },
+      {
+        id: 'halftone',
+        label: 'Halftone Pulse',
+        frag: `
+          precision mediump float;
+          uniform sampler2D u_texture;
+          uniform float u_time;
+          uniform vec2 u_resolution;
+          varying vec2 v_uv;
+
+          float ring(float d, float r, float t) {
+            return smoothstep(r + t, r, d) - smoothstep(r, r - t, d);
+          }
+
+          void main() {
+            vec2 uv = v_uv;
+            vec2 grid = uv * vec2(u_resolution.x / u_resolution.y * 40.0, 40.0);
+            vec2 id = floor(grid);
+            vec2 f = fract(grid) - 0.5;
+
+            float phase = sin(dot(id, vec2(1.7, 2.1)) + u_time * 2.0) * 0.3;
+            float r = length(f);
+            float dotMask = ring(r, 0.28 + phase * 0.05, 0.12);
+
+            vec4 textSample = texture2D(u_texture, uv + phase * 0.01);
+            float mask = textSample.a;
+
+            float glow = smoothstep(0.3, 0.8, mask) * 0.35;
+            vec3 baseColor = mix(vec3(0.03, 0.01, 0.07), vec3(0.45, 0.9, 0.8), mask);
+            vec3 accent = vec3(0.98, 0.54, 0.88);
+            vec3 color = mix(baseColor, accent, dotMask * mask);
+            color += glow * accent * 0.6;
+
+            gl_FragColor = vec4(color, 1.0);
+          }
+        `
+      },
+      {
+        id: 'nebula',
+        label: 'Nebula Drift',
+        frag: `
+          precision mediump float;
+          uniform sampler2D u_texture;
+          uniform float u_time;
+          uniform vec2 u_resolution;
+          varying vec2 v_uv;
+
+          vec2 hash(vec2 p) {
+            p = vec2(dot(p, vec2(127.1, 311.7)),
+                     dot(p, vec2(269.5, 183.3)));
+            return -1.0 + 2.0 * fract(sin(p) * 43758.5453123);
+          }
+
+          float noise(vec2 p) {
+            vec2 i = floor(p);
+            vec2 f = fract(p);
+            vec2 u = f * f * (3.0 - 2.0 * f);
+            float a = dot(hash(i + vec2(0.0, 0.0)), f - vec2(0.0, 0.0));
+            float b = dot(hash(i + vec2(1.0, 0.0)), f - vec2(1.0, 0.0));
+            float c = dot(hash(i + vec2(0.0, 1.0)), f - vec2(0.0, 1.0));
+            float d = dot(hash(i + vec2(1.0, 1.0)), f - vec2(1.0, 1.0));
+            return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+          }
+
+          float fbm(vec2 p) {
+            float v = 0.0;
+            float a = 0.5;
+            for (int i = 0; i < 5; i++) {
+              v += a * noise(p);
+              p *= 2.3;
+              a *= 0.55;
+            }
+            return v;
+          }
+
+          void main() {
+            vec2 uv = v_uv;
+            vec2 centered = (uv - 0.5) * vec2(u_resolution.x / u_resolution.y, 1.0);
+
+            float n = fbm(centered * 2.0 + u_time * 0.15);
+            float swirl = fbm(vec2(length(centered) * 2.5, atan(centered.y, centered.x) + u_time * 0.4));
+            float warp = sin(u_time * 0.6 + n * 6.28318) * 0.01;
+            vec2 warpedUV = uv + warp * vec2(0.6, 1.0) + swirl * 0.01;
+
+            vec4 textSample = texture2D(u_texture, warpedUV);
+            float mask = textSample.a;
+
+            vec3 nebula = mix(vec3(0.08, 0.03, 0.1), vec3(0.35, 0.9, 0.85), n * 0.8 + swirl * 0.2);
+            vec3 highlight = vec3(0.98, 0.54, 0.88) * smoothstep(0.4, 0.95, mask);
+            vec3 color = mix(nebula, highlight, mask);
+
+            float glow = smoothstep(0.25, 0.8, mask) * 0.4;
+            color += glow * vec3(0.9, 0.7, 1.0);
+
+            gl_FragColor = vec4(color, 1.0);
+          }
+        `
+      },
+      {
+        id: 'slam',
+        label: 'Cinematic Slam',
+        uniforms: ['u_wordCount'],
+        frag: `
+          precision mediump float;
+          uniform sampler2D u_texture;
+          uniform float u_time;
+          uniform vec2 u_resolution;
+          uniform float u_wordCount;
+          varying vec2 v_uv;
+
+          float bump(float t) {
+            float s = smoothstep(0.0, 0.22, t);
+            float overshoot = exp(-t * 4.0) * sin(t * 22.0) * 0.25;
+            return s + overshoot;
+          }
+
+          void main() {
+            vec2 uv = v_uv;
+
+            float words = max(1.0, u_wordCount);
+            float band = floor(uv.x * words);
+            float center = (band + 0.5) / words;
+
+            float lanes = 5.0;
+            float lane = floor(uv.y * lanes);
+            float delay = band * 0.18 + lane * 0.08;
+            float t = max(u_time - delay, 0.0);
+
+            float slam = bump(t);
+            float slideIn = clamp(1.0 - exp(-t * 6.0), 0.0, 1.0);
+            float shake = exp(-t * 5.0) * sin(t * 30.0 + lane * 1.7) * 0.008;
+            float spread = (uv.x - center) * 0.25;
+
+            vec2 offset = vec2(-0.3 * (1.0 - slideIn) + slam * 0.07 - spread * (1.0 - slideIn), shake);
+            vec2 uvSlam = uv + offset;
+
+            vec4 sample = texture2D(u_texture, uvSlam);
+            float mask = sample.a;
+
+            float vignette = smoothstep(0.92, 0.25, distance(uv, vec2(0.5, 0.5)));
+            float flash = smoothstep(0.0, 0.12, slam) * 0.25;
+
+            vec3 base = mix(vec3(0.01, 0.01, 0.05), vec3(0.9, 0.95, 1.0), flash);
+            vec3 accent = mix(vec3(0.4, 0.9, 0.85), vec3(1.0, 0.5, 0.88), band / words);
+            vec3 color = mix(base, accent, mask);
+
+            float edge = smoothstep(0.05, 0.18, slam) * smoothstep(0.0, 0.5, mask);
+            color += edge * 0.25;
+            color *= vignette;
+
+            gl_FragColor = vec4(color, 1.0);
+          }
+        `
+      },
+      {
+        id: 'ripple',
+        label: 'Glyph Ripple',
+        frag: `
+          precision mediump float;
+          uniform sampler2D u_texture;
+          uniform float u_time;
+          uniform vec2 u_resolution;
+          varying vec2 v_uv;
+
+          float hash11(float x) {
+            return fract(sin(x * 91.345 + 19.19) * 43758.5453);
+          }
+
+          void main() {
+            vec2 uv = v_uv;
+
+            float columns = 28.0;
+            float rows = 16.0;
+            vec2 cellId = floor(uv * vec2(columns, rows));
+            float jitter = hash11(cellId.x * 37.0 + cellId.y * 11.0) * 0.08 - 0.04;
+            vec2 cellCenter = (cellId + 0.5 + vec2(jitter, -jitter)) / vec2(columns, rows);
+
+            float phase = dot(cellId, vec2(0.7, 1.3));
+            float t = u_time * 2.8 + phase;
+
+            vec2 toCenter = uv - cellCenter;
+            float dist = length(toCenter) + 1e-4;
+            vec2 dir = toCenter / dist;
+
+            float rippleAmp = 0.0;
+            float rippleDetail = 0.0;
+            for (int i = 0; i < 10; i++) {
+              float fi = float(i);
+              float speed = 2.0 + fi * 0.5;
+              float freq = 10.0 + fi * 5.5;
+              float decay = exp(-dist * (6.5 + fi * 2.2));
+              float wave = sin(t * speed - dist * freq + fi * 0.8);
+              rippleAmp += wave * decay;
+              rippleDetail += cos(t * (speed + 0.8) + dist * (freq * 1.45) + fi);
+            }
+            rippleAmp /= 10.0;
+            rippleDetail /= 10.0;
+
+            float outward = smoothstep(0.0, 0.18, dist) * smoothstep(0.42, 0.2, dist);
+            float amp = 0.02 * outward * rippleAmp + 0.006 * rippleDetail;
+
+            float micro = sin(uv.x * u_resolution.x * 0.04 + u_time * 5.0) * sin(uv.y * u_resolution.y * 0.04 + u_time * 4.3) * 0.0015;
+
+            vec2 uvRip = uv + dir * amp + micro;
+            vec4 sample = texture2D(u_texture, uvRip);
+            float mask = sample.a;
+
+            float edge = smoothstep(0.35, 0.65, mask) * (sin(u_time * 8.0 + dist * 38.0) * 0.5 + 0.5);
+            float glow = smoothstep(0.2, 0.8, mask) * 0.3;
+
+            vec3 base = vec3(0.03, 0.01, 0.07);
+            vec3 ink = mix(base, sample.rgb * vec3(0.95, 1.02, 1.08) + edge * 0.2, mask);
+            ink += glow * vec3(0.7, 0.9, 1.1);
+
+            float vignette = smoothstep(0.95, 0.35, distance(uv, vec2(0.5, 0.5)));
+            ink *= vignette;
+
+            gl_FragColor = vec4(ink, 1.0);
+          }
+        `
+      },
+      {
+        id: 'prism',
+        label: 'Prismatic Bloom',
+        frag: `
+          precision mediump float;
+          uniform sampler2D u_texture;
+          uniform float u_time;
+          uniform vec2 u_resolution;
+          varying vec2 v_uv;
+
+          vec3 hash3(vec2 p) {
+            float n = sin(dot(p, vec2(41.0, 289.0)));
+            return fract(vec3(262144.0, 32768.0, 1024.0) * n);
+          }
+
+          float sdCircle(vec2 p, float r) {
+            return length(p) - r;
+          }
+
+          void main() {
+            vec2 uv = v_uv;
+            vec2 centered = (uv - 0.5) * vec2(u_resolution.x / u_resolution.y, 1.0);
+
+            // Sample text and expand it into a soft mask.
+            vec4 txt = texture2D(u_texture, uv);
+            float mask = txt.a;
+            float soft = smoothstep(0.15, 0.8, mask);
+
+            // Radial light shards
+            vec2 p = centered;
+            float angle = atan(p.y, p.x);
+            float radius = length(p);
+            float shards = 0.0;
+            for (int i = 0; i < 6; i++) {
+              float fi = float(i);
+              float dir = angle + fi * 1.0472 + u_time * 0.2;
+              float beam = cos(dir * 6.0 + radius * 18.0 - u_time * 2.0);
+              shards += smoothstep(0.7, 0.98, beam) * exp(-radius * 2.2);
+            }
+
+            // Prism chroma warp
+            vec2 warpDir = vec2(sin(u_time * 0.6), cos(u_time * 0.8)) * 0.02;
+            vec2 warpUV = uv + warpDir * (soft * 0.6 + 0.02);
+            vec3 chroma;
+            chroma.r = texture2D(u_texture, warpUV + warpDir * 0.5).a;
+            chroma.g = texture2D(u_texture, warpUV).a;
+            chroma.b = texture2D(u_texture, warpUV - warpDir * 0.5).a;
+            chroma = pow(chroma, vec3(1.5)) * 1.2;
+
+            // Particle sparks orbiting the text.
+            float sparks = 0.0;
+            for (int i = 0; i < 12; i++) {
+              float fi = float(i);
+              vec3 h = hash3(vec2(fi, u_time * 0.1));
+              float a = h.x * 6.28318 + u_time * (1.0 + h.y * 1.5);
+              float r = 0.2 + h.z * 0.35;
+              vec2 pos = r * vec2(cos(a), sin(a));
+              float d = sdCircle(centered - pos, 0.015 + h.x * 0.01);
+              sparks += smoothstep(0.04, 0.0, d) * (0.4 + 0.6 * h.y);
+            }
+
+            vec3 base = vec3(0.02, 0.01, 0.04);
+            vec3 glow = chroma * vec3(0.8, 0.9, 1.4) + shards * vec3(1.2, 0.7, 1.4) + sparks * vec3(1.4, 1.1, 0.6);
+            vec3 ink = mix(base, glow, soft);
+
+            // Bloom-ish lift
+            float vignette = smoothstep(0.95, 0.4, length(centered));
+            ink += vignette * 0.12;
+
+            gl_FragColor = vec4(ink, 1.0);
+          }
+        `
+      },
+      
+    ];
+
+    function createShader(glCtx, type, src) {
+      const shader = glCtx.createShader(type);
+      glCtx.shaderSource(shader, src);
+      glCtx.compileShader(shader);
+      if (!glCtx.getShaderParameter(shader, glCtx.COMPILE_STATUS)) {
+        console.error(glCtx.getShaderInfoLog(shader));
+        glCtx.deleteShader(shader);
+        return null;
+      }
+      return shader;
+    }
+
+    function createProgram(glCtx, vert, frag) {
+      const program = glCtx.createProgram();
+      glCtx.attachShader(program, vert);
+      glCtx.attachShader(program, frag);
+      glCtx.linkProgram(program);
+      if (!glCtx.getProgramParameter(program, glCtx.LINK_STATUS)) {
+        console.error(glCtx.getProgramInfoLog(program));
+        glCtx.deleteProgram(program);
+        return null;
+      }
+      return program;
+    }
+
+    const vertShader = createShader(gl, gl.VERTEX_SHADER, vertSrc);
+    if (!vertShader) {
+      throw new Error('Unable to build vertex shader.');
+    }
+    gl.activeTexture(gl.TEXTURE0);
+
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      new Float32Array([
+        -1, -1,
+        1, -1,
+        -1, 1,
+        -1, 1,
+        1, -1,
+        1, 1
+      ]),
+      gl.STATIC_DRAW
+    );
+
+    const shaderCache = new Map();
+    let activeShader = null;
+    const shaderCards = new Map();
+    const previewRenderers = [];
+    const previewTasks = [];
+    const previewMap = new Map();
+    const previewProgramCache = new Map();
+    let previewGl = null;
+    let previewVertShader = null;
+    let previewBuffer = null;
+    let previewTextTexture = null;
+    const MAX_PREVIEW_CONTEXTS = 3;
+    const previewTextCanvas = document.createElement('canvas');
+    const previewTextCtx = previewTextCanvas.getContext('2d', { willReadFrequently: true });
+    const shaderStatus = new Map();
+
+    function buildShaderProgram(def) {
+      const fragShader = createShader(gl, gl.FRAGMENT_SHADER, def.frag);
+      if (!fragShader) return null;
+      const program = createProgram(gl, vertShader, fragShader);
+      if (!program) {
+        gl.deleteShader(fragShader);
+        return null;
+      }
+      const locations = {
+        position: gl.getAttribLocation(program, 'a_position'),
+        time: gl.getUniformLocation(program, 'u_time'),
+        res: gl.getUniformLocation(program, 'u_resolution'),
+        texture: gl.getUniformLocation(program, 'u_texture')
+      };
+      const customUniforms = {};
+      (def.uniforms || []).forEach((name) => {
+        const loc = gl.getUniformLocation(program, name);
+        if (loc) customUniforms[name] = loc;
+      });
+      return { id: def.id, program, fragShader, locations, customUniforms };
+    }
+
+    function testShader(def) {
+      const fragShader = createShader(gl, gl.FRAGMENT_SHADER, def.frag);
+      if (!fragShader) {
+        return { ok: false, message: 'Fragment compile failed' };
+      }
+      const program = createProgram(gl, vertShader, fragShader);
+      if (!program) {
+        gl.deleteShader(fragShader);
+        return { ok: false, message: 'Program link failed' };
+      }
+      gl.deleteProgram(program);
+      gl.deleteShader(fragShader);
+      return { ok: true, message: 'OK' };
+    }
+
+    function updateShaderCardStatus(id, status) {
+      const card = shaderCards.get(id);
+      if (!card) return;
+      card.classList.toggle('error', !status.ok);
+    }
+
+    function validateAllShaders() {
+      shaderOptions.forEach((def) => {
+        const result = testShader(def);
+        shaderStatus.set(def.id, result);
+        updateShaderCardStatus(def.id, result);
+        if (!result.ok) {
+          console.error(`Shader ${def.label} failed to compile/link:`, result.message);
+        }
+      });
+    }
+
+    function useShader(id) {
+      const def = shaderOptions.find((s) => s.id === id);
+      if (!def) return;
+      let programEntry = shaderCache.get(id);
+      if (!programEntry) {
+        programEntry = buildShaderProgram(def);
+        if (!programEntry) {
+          console.error(`Failed to build shader ${def.label}`);
+          return;
+        }
+        shaderCache.set(id, programEntry);
+      }
+      activeShader = programEntry;
+      gl.useProgram(activeShader.program);
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      gl.enableVertexAttribArray(activeShader.locations.position);
+      gl.vertexAttribPointer(activeShader.locations.position, 2, gl.FLOAT, false, 0, 0);
+      gl.uniform1i(activeShader.locations.texture, 0);
+      gl.uniform2f(activeShader.locations.res, canvas.width, canvas.height);
+      applyCustomUniforms(activeShader, gl);
+    }
+
+    function createPreviewProgram(glPrev, def, vert) {
+      const frag = createShader(glPrev, glPrev.FRAGMENT_SHADER, def.frag);
+      if (!frag) return null;
+      const program = createProgram(glPrev, vert, frag);
+      if (!program) {
+        glPrev.deleteShader(frag);
+        return null;
+      }
+      const loc = {
+        position: glPrev.getAttribLocation(program, 'a_position'),
+        time: glPrev.getUniformLocation(program, 'u_time'),
+        res: glPrev.getUniformLocation(program, 'u_resolution'),
+        texture: glPrev.getUniformLocation(program, 'u_texture')
+      };
+      const customUniforms = {};
+      (def.uniforms || []).forEach((name) => {
+        const l = glPrev.getUniformLocation(program, name);
+        if (l) customUniforms[name] = l;
+      });
+      return { program, frag, loc, customUniforms };
+    }
+
+    function createPreviewTexture(glPrev, text, texture) {
+      const dpr = window.devicePixelRatio || 1;
+      const width = 240 * dpr;
+      const height = 160 * dpr;
+      previewTextCanvas.width = width;
+      previewTextCanvas.height = height;
+      previewTextCtx.clearRect(0, 0, width, height);
+
+      const fontSize = height * 0.45;
+      previewTextCtx.font = `700 ${fontSize}px "Space Grotesk", sans-serif`;
+      previewTextCtx.textAlign = 'center';
+      previewTextCtx.textBaseline = 'middle';
+      const gradient = previewTextCtx.createLinearGradient(0, 0, width, height);
+      gradient.addColorStop(0, '#7cf8d8');
+      gradient.addColorStop(0.5, '#d877ff');
+      gradient.addColorStop(1, '#6ab8ff');
+      previewTextCtx.fillStyle = gradient;
+      previewTextCtx.shadowColor = 'rgba(0,0,0,0.35)';
+      previewTextCtx.shadowBlur = 18;
+      previewTextCtx.shadowOffsetY = 8;
+      previewTextCtx.fillText(text, width / 2, height / 2, width - width * 0.2);
+
+      glPrev.bindTexture(glPrev.TEXTURE_2D, texture);
+      glPrev.texParameteri(glPrev.TEXTURE_2D, glPrev.TEXTURE_WRAP_S, glPrev.CLAMP_TO_EDGE);
+      glPrev.texParameteri(glPrev.TEXTURE_2D, glPrev.TEXTURE_WRAP_T, glPrev.CLAMP_TO_EDGE);
+      glPrev.texParameteri(glPrev.TEXTURE_2D, glPrev.TEXTURE_MIN_FILTER, glPrev.LINEAR);
+      glPrev.texParameteri(glPrev.TEXTURE_2D, glPrev.TEXTURE_MAG_FILTER, glPrev.LINEAR);
+      glPrev.texImage2D(glPrev.TEXTURE_2D, 0, glPrev.RGBA, glPrev.RGBA, glPrev.UNSIGNED_BYTE, previewTextCanvas);
+    }
+
+    function currentWordCount() {
+      const words = (input.value || '').trim().split(/\s+/).filter(Boolean);
+      return Math.max(1, words.length);
+    }
+
+    function currentTextValue() {
+      const val = (input.value || '').trim();
+      return val || 'funkytext';
+    }
+
+    function currentRenderKey() {
+      const shaderId = activeShader ? activeShader.id : 'default';
+      return `${shaderId}|${currentTextValue()}`;
+    }
+
+    function applyCustomUniforms(entry, targetGl, { previewWordCount } = {}) {
+      if (!entry || !entry.customUniforms) return;
+      if (entry.customUniforms.u_wordCount) {
+        const count = previewWordCount || currentWordCount();
+        targetGl.uniform1f(entry.customUniforms.u_wordCount, count);
+      }
+    }
+
+    function releasePreview(task) {
+      previewMap.delete(task.canvasEl);
+      task.initialized = false;
+    }
+
+    function ensurePreviewBudget() {}
+
+    function ensurePreviewGl() {
+      if (previewGl) return true;
+      const offscreen = document.createElement('canvas');
+      previewGl = offscreen.getContext('webgl', { premultipliedAlpha: false });
+      if (!previewGl) return false;
+      previewVertShader = createShader(previewGl, previewGl.VERTEX_SHADER, vertSrc);
+      previewBuffer = previewGl.createBuffer();
+      previewGl.bindBuffer(previewGl.ARRAY_BUFFER, previewBuffer);
+      previewGl.bufferData(
+        previewGl.ARRAY_BUFFER,
+        new Float32Array([
+          -1, -1,
+          1, -1,
+          -1, 1,
+          -1, 1,
+          1, -1,
+          1, 1
+        ]),
+        previewGl.STATIC_DRAW
+      );
+      previewTextTexture = previewGl.createTexture();
+      previewGl.bindTexture(previewGl.TEXTURE_2D, previewTextTexture);
+      previewGl.texParameteri(previewGl.TEXTURE_2D, previewGl.TEXTURE_WRAP_S, previewGl.CLAMP_TO_EDGE);
+      previewGl.texParameteri(previewGl.TEXTURE_2D, previewGl.TEXTURE_WRAP_T, previewGl.CLAMP_TO_EDGE);
+      previewGl.texParameteri(previewGl.TEXTURE_2D, previewGl.TEXTURE_MIN_FILTER, previewGl.LINEAR);
+      previewGl.texParameteri(previewGl.TEXTURE_2D, previewGl.TEXTURE_MAG_FILTER, previewGl.LINEAR);
+      return true;
+    }
+
+    function getPreviewProgram(def) {
+      const cached = previewProgramCache.get(def.id);
+      if (cached) return cached;
+      if (!previewGl || !previewVertShader) return null;
+      const frag = createShader(previewGl, previewGl.FRAGMENT_SHADER, def.frag);
+      if (!frag) return null;
+      const program = createProgram(previewGl, previewVertShader, frag);
+      if (!program) return null;
+      const loc = {
+        position: previewGl.getAttribLocation(program, 'a_position'),
+        time: previewGl.getUniformLocation(program, 'u_time'),
+        res: previewGl.getUniformLocation(program, 'u_resolution'),
+        texture: previewGl.getUniformLocation(program, 'u_texture')
+      };
+      const customUniforms = {};
+      (def.uniforms || []).forEach((name) => {
+        const l = previewGl.getUniformLocation(program, name);
+        if (l) customUniforms[name] = l;
+      });
+      const entry = { program, loc, customUniforms };
+      previewProgramCache.set(def.id, entry);
+      return entry;
+    }
+
+    function renderPreview(task) {
+      if (!ensurePreviewGl()) return;
+      const def = task.opt;
+      const programEntry = getPreviewProgram(def);
+      if (!programEntry) return;
+
+      const dpr = window.devicePixelRatio || 1;
+      const width = Math.max(200, (task.canvasEl.clientWidth || 220));
+      const height = Math.max(130, (task.canvasEl.clientHeight || 146));
+      previewGl.canvas.width = width * dpr;
+      previewGl.canvas.height = height * dpr;
+      previewGl.viewport(0, 0, previewGl.canvas.width, previewGl.canvas.height);
+
+      // Upload preview text
+      createPreviewTexture(previewGl, 'Preview', previewTextTexture);
+
+      previewGl.useProgram(programEntry.program);
+      previewGl.bindBuffer(previewGl.ARRAY_BUFFER, previewBuffer);
+      previewGl.enableVertexAttribArray(programEntry.loc.position);
+      previewGl.vertexAttribPointer(programEntry.loc.position, 2, previewGl.FLOAT, false, 0, 0);
+      previewGl.uniform1i(programEntry.loc.texture, 0);
+      previewGl.uniform2f(programEntry.loc.res, previewGl.canvas.width, previewGl.canvas.height);
+      previewGl.uniform1f(programEntry.loc.time, performance.now() * 0.001);
+      if (programEntry.customUniforms.u_wordCount) {
+        previewGl.uniform1f(programEntry.customUniforms.u_wordCount, 2.0);
+      }
+
+      previewGl.drawArrays(previewGl.TRIANGLES, 0, 6);
+
+      const ctx2d = task.canvasEl.getContext('2d');
+      if (ctx2d) {
+        ctx2d.clearRect(0, 0, task.canvasEl.width, task.canvasEl.height);
+        ctx2d.drawImage(
+          previewGl.canvas,
+          0,
+          0,
+          previewGl.canvas.width,
+          previewGl.canvas.height,
+          0,
+          0,
+          task.canvasEl.width,
+          task.canvasEl.height
+        );
+      }
+      task.initialized = true;
+    }
+
+    function createShaderCard(opt, idx) {
+      const card = document.createElement('div');
+      card.className = 'shader-card';
+      card.setAttribute('role', 'button');
+      card.setAttribute('tabindex', '0');
+      card.dataset.shaderId = opt.id;
+
+      const canvasEl = document.createElement('canvas');
+      canvasEl.width = 240;
+      canvasEl.height = 160;
+      card.appendChild(canvasEl);
+
+      const label = document.createElement('div');
+      label.className = 'label';
+      const text = document.createElement('span');
+      text.textContent = opt.label;
+      label.appendChild(text);
+      card.appendChild(label);
+
+      const task = { opt, canvasEl, initialized: false };
+      previewTasks.push(task);
+
+      card.addEventListener('click', () => selectShader(opt.id));
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          selectShader(opt.id);
+        }
+      });
+
+      shaderPicker.appendChild(card);
+      shaderCards.set(opt.id, card);
+    }
+
+    const textCanvas = document.createElement('canvas');
+    const textCtx = textCanvas.getContext('2d', { willReadFrequently: true });
+    let textTexture = gl.createTexture();
+
+    function setupTexture() {
+      gl.bindTexture(gl.TEXTURE_2D, textTexture);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    }
+
+    setupTexture();
+
+    shaderOptions.forEach((opt, idx) => createShaderCard(opt, idx));
+    validateAllShaders();
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const task = previewTasks.find((t) => t.canvasEl === entry.target);
+          if (!task) return;
+          if (entry.isIntersecting) {
+            renderPreview(task);
+          } else {
+            releasePreview(task);
+          }
+        });
+      },
+      { root: shaderPicker, rootMargin: '100px', threshold: 0.25 }
+    );
+
+    previewTasks.forEach((task) => observer.observe(task.canvasEl));
+
+    function drawTextTexture(text) {
+      const scale = window.devicePixelRatio || 1;
+      const baseWidth = canvas.clientWidth || 600;
+      const baseHeight = canvas.clientHeight || 400;
+      textCanvas.width = baseWidth * scale;
+      textCanvas.height = baseHeight * scale;
+      textCtx.clearRect(0, 0, textCanvas.width, textCanvas.height);
+
+      const fontSize = Math.max(72, Math.min(textCanvas.width, textCanvas.height) * 0.16);
+      textCtx.font = `700 ${fontSize}px "Space Grotesk", sans-serif`;
+      textCtx.textAlign = 'center';
+      textCtx.textBaseline = 'middle';
+
+      const gradient = textCtx.createLinearGradient(0, 0, textCanvas.width, textCanvas.height);
+      gradient.addColorStop(0, '#7cf8d8');
+      gradient.addColorStop(0.5, '#d877ff');
+      gradient.addColorStop(1, '#6ab8ff');
+      textCtx.fillStyle = gradient;
+      textCtx.shadowColor = 'rgba(0,0,0,0.35)';
+      textCtx.shadowBlur = 18;
+      textCtx.shadowOffsetY = 8;
+
+      wrapAndDraw(text, textCanvas.width - textCanvas.width * 0.16, textCanvas.height / 2, fontSize);
+
+      gl.bindTexture(gl.TEXTURE_2D, textTexture);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textCanvas);
+    }
+
+    function wrapAndDraw(text, maxWidth, centerY, fontSize) {
+      const paragraphs = text.split(/\n/);
+      const lines = [];
+
+      paragraphs.forEach((para, idx) => {
+        if (!para.trim()) {
+          lines.push('');
+          return;
+        }
+        const words = para.split(/\s+/);
+        let current = '';
+        for (const word of words) {
+          const test = current ? current + ' ' + word : word;
+          const metrics = textCtx.measureText(test);
+          if (metrics.width > maxWidth && current) {
+            lines.push(current);
+            current = word;
+          } else {
+            current = test;
+          }
+        }
+        if (current) lines.push(current);
+        if (idx < paragraphs.length - 1) lines.push('');
+      });
+
+      const lineHeight = fontSize * 1.05;
+      const offsetY = centerY - ((lines.length - 1) * lineHeight) / 2;
+      lines.forEach((line, i) => {
+        textCtx.fillText(line, textCanvas.width / 2, offsetY + i * lineHeight, maxWidth);
+      });
+    }
+
+    function resize() {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.parentElement.getBoundingClientRect();
+      const targetWidth = Math.max(480, rect.width);
+      const targetHeight = Math.max(320, rect.height || targetWidth * (9 / 16));
+      const needResize = canvas.width !== Math.floor(targetWidth * dpr) || canvas.height !== Math.floor(targetHeight * dpr);
+      if (needResize) {
+        canvas.width = Math.floor(targetWidth * dpr);
+        canvas.height = Math.floor(targetHeight * dpr);
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        if (activeShader) {
+          gl.useProgram(activeShader.program);
+          gl.uniform2f(activeShader.locations.res, canvas.width, canvas.height);
+        }
+        drawTextTexture(currentTextValue());
+      }
+    }
+
+    function renderPreviews() {}
+
+    let start = performance.now();
+    function render(now) {
+      resize();
+      if (!activeShader || capturingGif) {
+        requestAnimationFrame(render);
+        return;
+      }
+      const t = (now - start) * 0.001;
+      gl.useProgram(activeShader.program);
+      gl.uniform1f(activeShader.locations.time, t);
+      applyCustomUniforms(activeShader, gl);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+      renderPreviews(t);
+      requestAnimationFrame(render);
+    }
+
+    function refreshPreviewTextures(text) {
+      previewRenderers.forEach((p) => {
+        if (p.texture) {
+          createPreviewTexture(p.gl, 'Preview', p.texture);
+        }
+      });
+    }
+
+    function handleFunk() {
+      start = performance.now();
+      const textVal = currentTextValue();
+      drawTextTexture(textVal);
+      refreshPreviewTextures(textVal);
+      syncUrl();
+      setShareReady(false);
+      queueGifRender();
+    }
+
+    function selectShader(id) {
+      const status = shaderStatus.get(id);
+      if (status && !status.ok) {
+        console.warn(`Shader ${id} is not valid and cannot be activated.`);
+        return;
+      }
+      start = performance.now();
+      useShader(id);
+      shaderCards.forEach((card, key) => {
+        card.classList.toggle('selected', key === id);
+      });
+      handleFunk();
+      syncUrl();
+    }
+
+    function buildQuery() {
+      const params = new URLSearchParams();
+      const textVal = input.value.trim();
+      if (textVal) params.set('text', textVal);
+      if (activeShader) params.set('shader', activeShader.id);
+      return params.toString();
+    }
+
+    function syncUrl() {
+      const qs = buildQuery();
+      const newUrl = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    }
+
+    function currentLink() {
+      const qs = buildQuery();
+      return qs ? `${window.location.origin}${window.location.pathname}?${qs}` : `${window.location.origin}${window.location.pathname}`;
+    }
+
+    function showToast(message) {
+      if (!toastEl) return;
+      toastEl.textContent = message;
+      toastEl.classList.add('show');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toastEl.classList.remove('show');
+      }, 1400);
+    }
+
+    function toggleInstallAvailability(isVisible) {
+      if (!installBtn) return;
+      installBtn.hidden = !isVisible;
+      installBtn.classList.toggle('visible', isVisible);
+      document.body.classList.toggle('install-ready', isVisible);
+    }
+
+    async function handleInstallClick() {
+      if (!deferredInstallPrompt || !installBtn) return;
+      installBtn.disabled = true;
+      deferredInstallPrompt.prompt();
+      const choice = await deferredInstallPrompt.userChoice.catch(() => null);
+      deferredInstallPrompt = null;
+      installBtn.disabled = false;
+      toggleInstallAvailability(false);
+      if (choice && choice.outcome === 'accepted') {
+        showToast('Added to home screen');
+      }
+    }
+
+    async function copyLink() {
+      const url = currentLink();
+      if (navigator.clipboard) {
+        try {
+          await navigator.clipboard.writeText(url);
+          showToast('Copied');
+        } catch (err) {
+          console.error('Copy failed', err);
+        }
+      } else {
+        const temp = document.createElement('textarea');
+        temp.value = url;
+        document.body.appendChild(temp);
+        temp.select();
+        document.execCommand('copy');
+        document.body.removeChild(temp);
+        showToast('Copied');
+      }
+    }
+
+    async function shareGif() {
+      if (!shareReady || !gifBlob || lastGifKey !== currentRenderKey()) {
+        showToast('Rendering GIF…');
+        return;
+      }
+      shareBtn.disabled = true;
+      shareBtn.classList.add('rendering');
+
+      try {
+        let blob = gifBlob || (await ensureGifReady());
+        blob = await prepareShareBlob(blob);
+        const file = new File([blob], 'funkytext.gif', { type: 'image/gif' });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ title: '', text: '', files: [file] });
+          showToast('Shared');
+          return;
+        }
+
+        const canClipboardGif = !!(navigator.clipboard && navigator.clipboard.write && typeof ClipboardItem !== 'undefined');
+        if (canClipboardGif) {
+          const item = new ClipboardItem({ 'image/gif': blob });
+          await navigator.clipboard.write([item]);
+          showToast('GIF copied');
+          return;
+        }
+
+        downloadBlob(blob, 'funkytext.gif');
+        showToast('Downloaded GIF');
+      } catch (err) {
+        console.error('Share failed', err);
+        await copyLink();
+      } finally {
+        setShareReady(true);
+      }
+    }
+
+    function updateFsIcon(isFull) {
+      controlsToggle.title = 'Show controls';
+      controlsToggle.setAttribute('aria-label', controlsToggle.title);
+    }
+
+    function loadGifLib() {
+      if (window.GIF) return Promise.resolve();
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js';
+        script.async = true;
+        script.onload = () => resolve();
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
+
+    let gifWorkerUrl = null;
+    let gifWorkerPromise = null;
+    async function getGifWorkerUrl() {
+      if (gifWorkerUrl) return gifWorkerUrl;
+      if (gifWorkerPromise) return gifWorkerPromise;
+      gifWorkerPromise = fetch('https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js')
+        .then((res) => {
+          if (!res.ok) throw new Error('Failed to load gif worker');
+          return res.text();
+        })
+        .then((text) => {
+          const blob = new Blob([text], { type: 'application/javascript' });
+          gifWorkerUrl = URL.createObjectURL(blob);
+          return gifWorkerUrl;
+        })
+        .catch((err) => {
+          gifWorkerPromise = null;
+          throw err;
+        });
+      return gifWorkerPromise;
+    }
+
+    function sleep(ms) {
+      return new Promise((res) => setTimeout(res, ms));
+    }
+
+    // Capture defaults geared for speed while keeping output usable.
+    const GIF_CAPTURE_CONFIG = {
+      durationMs: 2400,
+      fps: 24,
+      scale: 0.6
+    };
+    // Keep shared payloads small enough for the Web Share API limits.
+    const GIF_SHARE_MAX_BYTES = 6 * 1024 * 1024;
+    const GIF_SHARE_CAPTURE_CONFIG = {
+      durationMs: 2200,
+      fps: 8,
+      scale: 0.55
+    };
+    const gifCopyCanvas = document.createElement('canvas');
+    const gifCopyCtx = gifCopyCanvas.getContext('2d', { willReadFrequently: true });
+
+    async function prepareShareBlob(blob) {
+      if (!blob) return blob;
+      if (blob.size <= GIF_SHARE_MAX_BYTES) return blob;
+      showToast('Making a lighter GIF to share…');
+      try {
+        const smaller = await generateGif(
+          GIF_SHARE_CAPTURE_CONFIG.durationMs,
+          GIF_SHARE_CAPTURE_CONFIG.fps,
+          GIF_SHARE_CAPTURE_CONFIG.scale
+        );
+        return smaller.size < blob.size ? smaller : blob;
+      } catch (err) {
+        console.error('Downscaled share render failed', err);
+        return blob;
+      }
+    }
+
+    // Render a single frame at a synthetic timestamp so we don't have to wait in real time.
+    function renderFrameAtTime(tSeconds) {
+      if (!activeShader) return;
+      resize();
+      gl.useProgram(activeShader.program);
+      gl.uniform1f(activeShader.locations.time, tSeconds);
+      applyCustomUniforms(activeShader, gl);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+    }
+
+    async function generateGif(
+      durationMs = GIF_CAPTURE_CONFIG.durationMs,
+      fps = GIF_CAPTURE_CONFIG.fps,
+      scale = GIF_CAPTURE_CONFIG.scale
+    ) {
+      await loadGifLib();
+      const workerScript = await getGifWorkerUrl();
+      if (!window.GIF) throw new Error('GIF library failed to load');
+      const frameDelay = Math.max(20, Math.floor(1000 / fps));
+      const frames = Math.max(3, Math.floor(durationMs / frameDelay));
+      if (!canvas.width || !canvas.height) {
+        throw new Error('Canvas not ready for GIF capture');
+      }
+      const width = Math.max(1, Math.round(canvas.width * scale));
+      const height = Math.max(1, Math.round(canvas.height * scale));
+      gifCopyCanvas.width = width;
+      gifCopyCanvas.height = height;
+      const gif = new GIF({
+        workers: 4,
+        quality: 10,
+        width,
+        height,
+        workerScript
+      });
+      const totalSeconds = durationMs / 1000;
+      capturingGif = true;
+      for (let i = 0; i < frames; i++) {
+        const t = (i / frames) * totalSeconds;
+        renderFrameAtTime(t);
+        gifCopyCtx.clearRect(0, 0, width, height);
+        gifCopyCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, width, height);
+        gif.addFrame(gifCopyCtx, { copy: true, delay: frameDelay });
+      }
+      capturingGif = false;
+      start = performance.now();
+      return new Promise((resolve, reject) => {
+        gif.on('finished', (blob) => resolve(blob));
+        gif.on('abort', () => reject(new Error('GIF render aborted')));
+        gif.on('error', (err) => reject(err));
+        gif.render();
+      });
+    }
+
+    function queueGifRender(delay = 500) {
+      setShareReady(false);
+      if (gifRenderTimer) clearTimeout(gifRenderTimer);
+      gifRenderTimer = setTimeout(() => {
+        if (gifRenderPromise) return;
+        renderGifNow().catch((err) => console.error('Queued GIF render failed', err));
+      }, delay);
+    }
+
+    async function renderGifNow() {
+      const key = currentRenderKey();
+      if (gifRenderPromise) {
+        return gifRenderPromise;
+      }
+      setShareReady(false);
+      gifRenderPromise = generateGif()
+        .then((blob) => {
+          gifBlob = blob;
+          lastGifKey = key;
+          const isCurrent = key === currentRenderKey();
+          // If the user changed the shader/text mid-render, queue a fresh GIF instead of marking this one ready.
+          if (isCurrent) {
+            setShareReady(true);
+          } else {
+            setShareReady(false);
+            queueGifRender(120);
+          }
+          return blob;
+        })
+        .catch((err) => {
+          console.error('GIF generation failed', err);
+          setShareReady(false);
+          throw err;
+        })
+        .finally(() => {
+          gifRenderPromise = null;
+        });
+      return gifRenderPromise;
+    }
+
+    async function ensureGifReady() {
+      const key = currentRenderKey();
+      if (gifBlob && lastGifKey === key) {
+        return gifBlob;
+      }
+      return renderGifNow();
+    }
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function releaseAllPreviews() {
+      previewTasks.forEach((task) => {
+        if (task.initialized) {
+          releasePreview(task);
+        }
+      });
+    }
+
+    function hideControls(opts = {}) {
+      const { fullscreen = false } = opts;
+      document.body.classList.add('controls-hidden');
+      releaseAllPreviews();
+      if (fullscreen) setFullscreen(true);
+    }
+
+    function showControls() {
+      document.body.classList.remove('controls-hidden');
+      setFullscreen(false);
+    }
+
+    function toggleMobileCanvasFocus() {
+      hideControls({ fullscreen: true });
+    }
+
+    function setFullscreen(isFull) {
+      document.body.classList.toggle('fullscreen', isFull);
+      updateFsIcon(isFull);
+    }
+
+    canvas.addEventListener('click', toggleMobileCanvasFocus);
+
+    controlsToggle.addEventListener('click', () => {
+      const hidden = document.body.classList.contains('controls-hidden');
+      if (hidden) {
+        showControls();
+      } else {
+        hideControls();
+      }
+    });
+
+    copyBtn.addEventListener('click', copyLink);
+    shareBtn.addEventListener('click', shareGif);
+    if (installBtn) {
+      installBtn.addEventListener('click', handleInstallClick);
+    }
+    input.addEventListener('input', handleFunk);
+    input.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'enter') {
+        handleFunk();
+      }
+    });
+
+    function applyDeepLink() {
+      const params = new URLSearchParams(window.location.search);
+      const textParam = params.get('text');
+      const shaderParam = params.get('shader');
+      if (textParam) {
+        input.value = textParam;
+      }
+      if (shaderParam && shaderOptions.find((s) => s.id === shaderParam)) {
+        selectShader(shaderParam);
+      }
+      const hasText = (input.value || '').trim().length > 0;
+      const hasParams = textParam || shaderParam || params.toString();
+      if (window.innerWidth >= 900 && hasParams) {
+        if (hasText) {
+          hideControls();
+        } else {
+          showControls();
+        }
+      } else if (window.innerWidth < 900 && hasParams && hasText) {
+        hideControls();
+      }
+      queueGifRender();
+    }
+
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 900) {
+        document.body.classList.remove('controls-hidden');
+        setFullscreen(false);
+      }
+    });
+
+    window.addEventListener('beforeinstallprompt', (event) => {
+      event.preventDefault();
+      deferredInstallPrompt = event;
+      toggleInstallAvailability(true);
+    });
+
+    window.addEventListener('appinstalled', () => {
+      deferredInstallPrompt = null;
+      toggleInstallAvailability(false);
+      showToast('Ready to use offline');
+    });
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch((err) => {
+          console.error('Service worker registration failed', err);
+        });
+      });
+    }
+
+    applyDeepLink();
+    setShareReady(false);
+    if (!activeShader) {
+      selectShader(shaderOptions[0].id);
+    }
+    updateFsIcon(document.body.classList.contains('fullscreen'));
+    requestAnimationFrame(render);
+  </script>
+</body>
+</html>
