@@ -4,8 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>funkytext</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1' y1='0' y2='1'%3E%3Cstop stop-color='%237cf8d8'/%3E%3Cstop offset='1' stop-color='%23ff7ee2'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='12' fill='%230d0a1a'/%3E%3Ctext x='50%25' y='52%25' font-family='Space Grotesk,Arial' font-weight='700' font-size='34' text-anchor='middle' fill='url(%23g)'%3Ef%3C/text%3E%3C/svg%3E">
   <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
@@ -469,7 +472,7 @@
       <path d="M12 5v14"></path>
       <path d="M5 12h14"></path>
     </svg>
-    Add to Home
+    <span class="install-label">Add to Home</span>
   </button>
   <main>
     <section class="canvas-wrap">
@@ -522,6 +525,7 @@
     const copyBtn = document.getElementById('copy-btn');
     const shareBtn = document.getElementById('share-btn');
     const installBtn = document.getElementById('install-btn');
+    const installLabel = installBtn ? installBtn.querySelector('.install-label') : null;
     const toastEl = document.getElementById('toast');
     let toastTimer = null;
     let capturingGif = false;
@@ -531,6 +535,11 @@
     let gifRenderTimer = null;
     let lastGifKey = null;
     let deferredInstallPrompt = null;
+    let installMode = 'prompt'; // 'prompt' uses beforeinstallprompt; 'ios-hint' shows manual instructions
+
+    const isiOS = /iphone|ipad|ipod/i.test(navigator.userAgent || '');
+    const isStandalone = () =>
+      window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
     // Preserve the drawing buffer so frames can be copied into GIF captures instead of going black
     const gl = canvas.getContext('webgl', { premultipliedAlpha: false, preserveDrawingBuffer: true });
@@ -2091,8 +2100,39 @@
       document.body.classList.toggle('install-ready', isVisible);
     }
 
+    function setInstallMode(mode) {
+      installMode = mode;
+      if (!installBtn) return;
+      if (installLabel) {
+        installLabel.textContent = mode === 'ios-hint' ? 'Add to Home (iOS)' : 'Add to Home';
+      }
+      const ariaLabel =
+        mode === 'ios-hint'
+          ? 'Add funkytext to your home screen on iOS'
+          : 'Add funkytext to your home screen';
+      installBtn.setAttribute('aria-label', ariaLabel);
+    }
+
+    function ensureInstallEntryPoint() {
+      if (!installBtn || isStandalone()) return;
+      if (deferredInstallPrompt) {
+        setInstallMode('prompt');
+        toggleInstallAvailability(true);
+        return;
+      }
+      if (isiOS) {
+        setInstallMode('ios-hint');
+        toggleInstallAvailability(true);
+      }
+    }
+
     async function handleInstallClick() {
-      if (!deferredInstallPrompt || !installBtn) return;
+      if (!installBtn) return;
+      if (installMode === 'ios-hint') {
+        showToast('Tap Share, then "Add to Home Screen"');
+        return;
+      }
+      if (!deferredInstallPrompt) return;
       installBtn.disabled = true;
       deferredInstallPrompt.prompt();
       const choice = await deferredInstallPrompt.userChoice.catch(() => null);
@@ -2364,9 +2404,21 @@
       if (fullscreen) setFullscreen(true);
     }
 
+    function focusInputIfVisible() {
+      if (!document.body.classList.contains('controls-hidden') && input && !input.disabled) {
+        requestAnimationFrame(() => {
+          input.focus();
+        });
+      }
+    }
+
     function showControls() {
+      const wasHidden = document.body.classList.contains('controls-hidden');
       document.body.classList.remove('controls-hidden');
       setFullscreen(false);
+      if (wasHidden) {
+        focusInputIfVisible();
+      }
     }
 
     function toggleMobileCanvasFocus() {
@@ -2435,11 +2487,13 @@
     window.addEventListener('beforeinstallprompt', (event) => {
       event.preventDefault();
       deferredInstallPrompt = event;
+      setInstallMode('prompt');
       toggleInstallAvailability(true);
     });
 
     window.addEventListener('appinstalled', () => {
       deferredInstallPrompt = null;
+      installMode = 'prompt';
       toggleInstallAvailability(false);
       showToast('Ready to use offline');
     });
@@ -2454,9 +2508,11 @@
 
     applyDeepLink();
     setShareReady(false);
+    ensureInstallEntryPoint();
     if (!activeShader) {
       selectShader(shaderOptions[0].id);
     }
+    focusInputIfVisible();
     updateFsIcon(document.body.classList.contains('fullscreen'));
     requestAnimationFrame(render);
   </script>
