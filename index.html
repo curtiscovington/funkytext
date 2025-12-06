@@ -43,6 +43,7 @@
                   var(--bg);
       color: var(--text);
       font-family: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
+      font-size: 16px;
       overflow: hidden;
       display: block;
     }
@@ -431,7 +432,7 @@
 
       textarea {
         min-height: 110px;
-        font-size: 15px;
+        font-size: 16px;
       }
 
       .shader-picker {
@@ -456,7 +457,7 @@
 
       .icon-btn {
         padding: 9px 10px;
-        font-size: 13px;
+        font-size: 16px;
       }
     }
   </style>
@@ -2494,10 +2495,44 @@
     });
 
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch((err) => {
-          console.error('Service worker registration failed', err);
+      const ensureSwUpdates = (registration) => {
+        let hasController = !!navigator.serviceWorker.controller;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!hasController) {
+            hasController = true;
+            return;
+          }
+          window.location.reload();
         });
+
+        const requestSkipWaiting = (worker) => {
+          if (worker) worker.postMessage({ type: 'SKIP_WAITING' });
+        };
+
+        if (registration.waiting) {
+          requestSkipWaiting(registration.waiting);
+        }
+
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          if (!newWorker) return;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              requestSkipWaiting(newWorker);
+            }
+          });
+        });
+
+        registration.update();
+      };
+
+      window.addEventListener('load', () => {
+        navigator.serviceWorker
+          .register('./sw.js')
+          .then((registration) => ensureSwUpdates(registration))
+          .catch((err) => {
+            console.error('Service worker registration failed', err);
+          });
       });
     }
 

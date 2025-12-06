@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const STATIC_CACHE = `funkytext-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `funkytext-runtime-${CACHE_VERSION}`;
 const APP_ASSETS = [
@@ -78,7 +78,7 @@ self.addEventListener('fetch', (event) => {
       return;
     }
 
-    event.respondWith(cacheFirst(event.request));
+    event.respondWith(staleWhileRevalidate(event.request, STATIC_CACHE));
     return;
   }
 
@@ -89,5 +89,11 @@ self.addEventListener('fetch', (event) => {
 
   if (url.hostname.includes('cdn.jsdelivr.net')) {
     event.respondWith(staleWhileRevalidate(event.request, RUNTIME_CACHE));
+  }
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
   }
 });
