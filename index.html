@@ -2099,11 +2099,11 @@
       installMode = mode;
       if (!installBtn) return;
       if (installLabel) {
-        installLabel.textContent = mode === 'ios-hint' ? 'Add to Home (iOS)' : 'Add to Home';
+        installLabel.textContent = 'Add to Home';
       }
       const ariaLabel =
         mode === 'ios-hint'
-          ? 'Add funkytext to your home screen on iOS'
+          ? 'Add funkytext to your home screen'
           : 'Add funkytext to your home screen';
       installBtn.setAttribute('aria-label', ariaLabel);
     }
